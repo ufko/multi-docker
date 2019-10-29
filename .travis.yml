@@ -9,7 +9,7 @@ before_install:
 script:
   - docker run -e CI=true ufuko/react-test npm run test
 
-after_succes:
+after_success:
   - docker build -t ufuko/multi-client ./client
   - docker build -t ufuko/multi-nginx ./nginx
   - docker build -t ufuko/multi-server ./server
