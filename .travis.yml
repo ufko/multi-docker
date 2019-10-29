@@ -1,0 +1,35 @@
+#language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t ufuko/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true ufuko/react-test npm run test
+
+after_succes:
+  - docker build -t ufuko/multi-client ./client
+  - docker build -t ufuko/multi-nginx ./nginx
+  - docker build -t ufuko/multi-server ./server
+  - docker build -t ufuko/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push ufuko/multi-client
+  - docker push ufuko/multi-nginx
+  - docker push ufuko/multi-server
+  - docker push ufuko/multi-worker
+
+deploy:
+  provider: elasticbeanstalk
+  region: 'us-east-2'
+  app: 'docker-react'
+  env: 'DockerReact-env'
+  bucket_name: 'elasticbeanstalk-us-east-2-022120187106'
+  bucket_path: 'docker-react'
+  on:
+    branch: master
+  access_key_id:
+    secure: $AWS_ACCESS_KEY
+  secret_access_key:
+    secure: '$AWS_SECRET_KEY'
